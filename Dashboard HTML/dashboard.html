@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Control Motores DC</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/5.0.5/mqtt.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; display: flex; flex-direction: column; align-items: center; padding: 40px; background: #1a1a2e; color: white; }
+        h1 { margin-bottom: 30px; }
+        .motor-card { background: #16213e; border-radius: 12px; padding: 30px; margin: 10px; width: 280px; text-align: center; }
+        .motor-card h2 { margin-bottom: 15px; }
+        input[type=range] { width: 100%; accent-color: #00b894; }
+        .valor { font-size: 22px; font-weight: bold; margin-top: 10px; color: #00b894; }
+        #status { margin-top: 20px; font-size: 14px; color: #a0a0a0; }
+    </style>
+</head>
+<body>
+    <h1>⚙️ Control de Motores DC</h1>
+
+    <div class="motor-card">
+        <h2>Motor 1</h2>
+        <input type="range" min="0" max="255" value="0" oninput="publicar('iot/motor1', this.value); document.getElementById('v1').textContent = this.value">
+        <div class="valor" id="v1">0</div>
+    </div>
+
+    <div class="motor-card">
+        <h2>Motor 2</h2>
+        <input type="range" min="0" max="255" value="0" oninput="publicar('iot/motor2', this.value); document.getElementById('v2').textContent = this.value">
+        <div class="valor" id="v2">0</div>
+    </div>
+
+    <div class="motor-card">
+        <h2>Motor 3</h2>
+        <input type="range" min="0" max="255" value="0" oninput="publicar('iot/motor3', this.value); document.getElementById('v3').textContent = this.value">
+        <div class="valor" id="v3">0</div>
+    </div>
+
+    <div class="motor-card">
+        <h2>Motor 4</h2>
+        <input type="range" min="0" max="255" value="0" oninput="publicar('iot/motor4', this.value); document.getElementById('v4').textContent = this.value">
+        <div class="valor" id="v4">0</div>
+    </div>
+
+    <p id="status">Conectando al broker...</p>
+
+    <script>
+        const client = mqtt.connect("wss://broker.emqx.io:8084/mqtt");
+
+        client.on("connect", () => {
+            document.getElementById("status").textContent = "✅ Conectado al broker";
+        });
+
+        client.on("error", (err) => {
+            document.getElementById("status").textContent = "❌ Error: " + err.message;
+        });
+
+        const timers = {};
+        function publicar(topic, valor) {
+            clearTimeout(timers[topic]);
+            timers[topic] = setTimeout(() => {
+                client.publish(topic, String(valor), { qos: 1 });
+                console.log(`Publicado → ${topic}: ${valor}`);
+            }, 50);
+        }
+    </script>
+</body>
+</html>
